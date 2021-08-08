@@ -7,7 +7,7 @@ const { readFile, writeFile } = fs;
 router.post("/", async (req, res) => {
   try {
     let newAccount = req.body;
-    const data = JSON.parse(await readFile("accounts.json"));
+    const data = JSON.parse(await readFile(global.fileName));
 
     newAccount = {
       id: data.nextId++,
@@ -15,8 +15,19 @@ router.post("/", async (req, res) => {
     };
     data.accounts.push(newAccount);
 
-    await writeFile("accounts.json", JSON.stringify(data));
+    await writeFile(global.fileName, JSON.stringify(data));
     res.send(newAccount);
+  } catch (err) {
+    res.status(400).send({ error: err.message });
+  }
+});
+
+router.get("/", async (_req, res) => {
+  try {
+    const data = JSON.parse(await readFile(global.fileName));
+    delete data.nextId;
+
+    res.send(data);
   } catch (err) {
     res.status(400).send({ error: err.message });
   }
