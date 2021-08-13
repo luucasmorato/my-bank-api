@@ -2,6 +2,7 @@ import express from "express";
 import accountsRouter from "./routes/accounts.js";
 import { promises as fs } from "fs";
 import winston from "winston";
+import cors from "cors";
 
 global.fileName = "accounts.json";
 
@@ -24,6 +25,8 @@ const { readFile, writeFile } = fs;
 const app = express();
 app.use(express.json());
 app.use("/account", accountsRouter);
+
+app.use(cors());
 
 app.listen(3333, async () => {
   try {
