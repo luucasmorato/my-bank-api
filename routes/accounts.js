@@ -7,11 +7,17 @@ const { readFile, writeFile } = fs;
 router.post("/", async (req, res, next) => {
   try {
     let newAccount = req.body;
+
+    if (!account.name || account.balance == null) {
+      throw new Error("Name and balance is required.");
+    }
+
     const data = JSON.parse(await readFile(global.fileName));
 
     newAccount = {
       id: data.nextId++,
-      ...newAccount,
+      name: account.name,
+      balance: account.balance,
     };
     data.accounts.push(newAccount);
 
@@ -63,6 +69,7 @@ router.delete("/:id", async (req, res, next) => {
 
     await writeFile(global.fileName, JSON.stringify(data));
     res.end();
+
     logger.info(`DELETE /account/:id - ${req.params.id}`);
   } catch (err) {
     next(err);
@@ -73,13 +80,23 @@ router.put("/", async (req, res, next) => {
   try {
     const account = req.body;
 
+    if (!account.id || !account.name || account.balance == null) {
+      throw new Error("Id, name and balance is required.");
+    }
+
     const data = JSON.parse(await readFile(global.fileName));
     const index = data.accounts.findIndex((acc) => acc.id == account.id);
 
-    data.accounts[index] = account;
+    if (index === -1) {
+      throw new Error("Id not found.");
+    }
+
+    data.accounts[index].name = account.name;
+    data.accounts[index].balance = account.balance;
 
     await writeFile(global.fileName, JSON.stringify(data));
     res.send(account);
+
     logger.info(`PUT /account - ${JSON.stringify(account)}`);
   } catch (err) {
     next(err);
@@ -90,13 +107,22 @@ router.patch("/updateBalance", async (req, res, next) => {
   try {
     const { id, balance } = req.body;
 
+    if (!id || balance == null) {
+      throw new Error("Id and balance is required.");
+    }
+
     const data = JSON.parse(await readFile(global.fileName));
     const index = data.accounts.findIndex((acc) => acc.id == id);
+
+    if (index === -1) {
+      throw new Error("Id not found.");
+    }
 
     data.accounts[index].balance = balance;
 
     await writeFile(global.fileName, JSON.stringify(data));
     res.send(data.accounts[index]);
+
     logger.info(`PATCH /account/updateBalance - ${JSON.stringify(account)}`);
   } catch (err) {
     next(err);
