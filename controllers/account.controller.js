@@ -1,14 +1,12 @@
-import express from "express";
 import { promises as fs } from "fs";
 
-const router = express.Router();
 const { readFile, writeFile } = fs;
 
-router.post("/", async (req, res, next) => {
+async function createAccount(req, res, next) {
   try {
     let newAccount = req.body;
 
-    if (!account.name || account.balance == null) {
+    if (!newAccount.name || newAccount.balance == null) {
       throw new Error("Name and balance is required.");
     }
 
@@ -16,8 +14,8 @@ router.post("/", async (req, res, next) => {
 
     newAccount = {
       id: data.nextId++,
-      name: account.name,
-      balance: account.balance,
+      name: newAccount.name,
+      balance: newAccount.balance,
     };
     data.accounts.push(newAccount);
 
@@ -28,9 +26,9 @@ router.post("/", async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-});
+}
 
-router.get("/", async (_req, res, next) => {
+async function getAccounts(_req, res, next) {
   try {
     const data = JSON.parse(await readFile(global.fileName));
     delete data.nextId;
@@ -40,9 +38,9 @@ router.get("/", async (_req, res, next) => {
   } catch (err) {
     next(err);
   }
-});
+}
 
-router.get("/:id", async (req, res, next) => {
+async function getAccount(req, res, next) {
   try {
     const { id } = req.params;
     const data = JSON.parse(await readFile(global.fileName));
@@ -56,9 +54,9 @@ router.get("/:id", async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-});
+}
 
-router.delete("/:id", async (req, res, next) => {
+async function deleteAccount(req, res, next) {
   try {
     const { id } = req.params;
     const data = JSON.parse(await readFile(global.fileName));
@@ -74,9 +72,9 @@ router.delete("/:id", async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-});
+}
 
-router.put("/", async (req, res, next) => {
+async function updateAccount(req, res, next) {
   try {
     const account = req.body;
 
@@ -101,9 +99,9 @@ router.put("/", async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-});
+}
 
-router.patch("/updateBalance", async (req, res, next) => {
+async function updateBalance(req, res, next) {
   try {
     const { id, balance } = req.body;
 
@@ -127,11 +125,13 @@ router.patch("/updateBalance", async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-});
+}
 
-router.use((err, req, res, _next) => {
-  logger.error(`${req.method} ${req.baseUrl} - ${err.message}`);
-  res.status(400).send({ error: err.message });
-});
-
-export default router;
+export default {
+  createAccount,
+  getAccounts,
+  getAccount,
+  deleteAccount,
+  updateAccount,
+  updateBalance,
+};
