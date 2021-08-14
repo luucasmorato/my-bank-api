@@ -1,7 +1,4 @@
-import { promises as fs } from "fs";
 import AccountService from "../services/account.service.js";
-
-const { readFile, writeFile } = fs;
 
 async function createAccount(req, res, next) {
   try {
@@ -70,14 +67,14 @@ async function updateAccount(req, res, next) {
 
 async function updateBalance(req, res, next) {
   try {
-    const { id, balance } = req.body;
+    const account = req.body;
 
-    if (!id || balance == null) {
+    if (!account.id || account.balance == null) {
       throw new Error("Id and balance is required.");
     }
-    res.send(await AccountService.updateAccount(id, balance));
+    res.send(await AccountService.updateAccount(account));
 
-    logger.info(`PATCH /account/updateBalance - ${JSON.stringify(account)}`);
+    logger.info(`PATCH /account/updateBalance`);
   } catch (err) {
     next(err);
   }
