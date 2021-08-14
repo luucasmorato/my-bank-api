@@ -1,4 +1,5 @@
 import { promises as fs } from "fs";
+import AccountService from "../services/account.service.js";
 
 const { readFile, writeFile } = fs;
 
@@ -10,19 +11,10 @@ async function createAccount(req, res, next) {
       throw new Error("Name and balance is required.");
     }
 
-    const data = JSON.parse(await readFile(global.fileName));
-
-    newAccount = {
-      id: data.nextId++,
-      name: newAccount.name,
-      balance: newAccount.balance,
-    };
-    data.accounts.push(newAccount);
-
-    await writeFile(global.fileName, JSON.stringify(data));
+    newAccount = await AccountService.createAccount(newAccount);
     res.send(newAccount);
 
-    logger.info(`POST /account - ${JSON.stringify(account)}`);
+    logger.info(`POST /account - ${JSON.stringify(newAccount)}`);
   } catch (err) {
     next(err);
   }
@@ -30,10 +22,7 @@ async function createAccount(req, res, next) {
 
 async function getAccounts(_req, res, next) {
   try {
-    const data = JSON.parse(await readFile(global.fileName));
-    delete data.nextId;
-
-    res.send(data);
+    res.send(await AccountService.getAccounts());
     logger.info(`GET /account`);
   } catch (err) {
     next(err);
@@ -43,13 +32,8 @@ async function getAccounts(_req, res, next) {
 async function getAccount(req, res, next) {
   try {
     const { id } = req.params;
-    const data = JSON.parse(await readFile(global.fileName));
+    res.send(await AccountService.getAccount(id));
 
-    const account = data.accounts.find(
-      (account) => account.id === parseInt(id)
-    );
-
-    res.send(account);
     logger.info(`GET /account/:id`);
   } catch (err) {
     next(err);
@@ -59,13 +43,7 @@ async function getAccount(req, res, next) {
 async function deleteAccount(req, res, next) {
   try {
     const { id } = req.params;
-    const data = JSON.parse(await readFile(global.fileName));
-
-    data.accounts = data.accounts.filter(
-      (account) => account.id !== parseInt(id)
-    );
-
-    await writeFile(global.fileName, JSON.stringify(data));
+    await AccountService.deleteAccount(id);
     res.end();
 
     logger.info(`DELETE /account/:id - ${req.params.id}`);
@@ -82,18 +60,7 @@ async function updateAccount(req, res, next) {
       throw new Error("Id, name and balance is required.");
     }
 
-    const data = JSON.parse(await readFile(global.fileName));
-    const index = data.accounts.findIndex((acc) => acc.id == account.id);
-
-    if (index === -1) {
-      throw new Error("Id not found.");
-    }
-
-    data.accounts[index].name = account.name;
-    data.accounts[index].balance = account.balance;
-
-    await writeFile(global.fileName, JSON.stringify(data));
-    res.send(account);
+    res.send(await AccountService.updateAccount(account));
 
     logger.info(`PUT /account - ${JSON.stringify(account)}`);
   } catch (err) {
@@ -108,18 +75,7 @@ async function updateBalance(req, res, next) {
     if (!id || balance == null) {
       throw new Error("Id and balance is required.");
     }
-
-    const data = JSON.parse(await readFile(global.fileName));
-    const index = data.accounts.findIndex((acc) => acc.id == id);
-
-    if (index === -1) {
-      throw new Error("Id not found.");
-    }
-
-    data.accounts[index].balance = balance;
-
-    await writeFile(global.fileName, JSON.stringify(data));
-    res.send(data.accounts[index]);
+    res.send(await AccountService.updateAccount(id, balance));
 
     logger.info(`PATCH /account/updateBalance - ${JSON.stringify(account)}`);
   } catch (err) {
